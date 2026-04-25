@@ -1,0 +1,1904 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Cards — AI משימות לזמן פנוי</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&family=Reem+Kufi:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+/* Cards — Hi-fi design tokens (used as CSS vars)
+   Warm, soft, mobile-first. Hebrew RTL.
+*/
+:root {
+  --bg: #f6f2eb;
+  --surface: #ffffff;
+  --surface-2: #fbf7f0;
+  --ink: #1b1916;
+  --ink-2: #43403b;
+  --ink-3: #7a756c;
+  --ink-4: #aea89e;
+  --line: #ecE4d6;
+  --line-strong: #d9cfbd;
+  --accent: #c9611a;         /* warm amber */
+  --accent-ink: #6e3409;
+  --accent-soft: #fbe5cd;
+  --accent-soft-2: #fdf0dd;
+  --danger: #b04242;
+  --success: #4a7a47;
+
+  /* Category colors (muted, cohesive) */
+  --c-finance: #a65e2e;
+  --c-finance-bg: #f6e2cf;
+  --c-health:  #4a7a6a;
+  --c-health-bg: #dbebe4;
+  --c-home:    #8c6a3a;
+  --c-home-bg: #eee2cb;
+  --c-family:  #a34b6a;
+  --c-family-bg: #f1d9e0;
+  --c-work:    #445e8a;
+  --c-work-bg: #dbe3f0;
+  --c-car:     #6b6b6b;
+  --c-car-bg:  #e5e1da;
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+
+  --shadow-sm: 0 1px 2px rgba(40,30,15,0.05), 0 2px 6px rgba(40,30,15,0.04);
+  --shadow-md: 0 2px 8px rgba(40,30,15,0.06), 0 8px 24px rgba(40,30,15,0.06);
+  --shadow-lg: 0 6px 18px rgba(40,30,15,0.08), 0 24px 60px rgba(40,30,15,0.12);
+  --shadow-card: 0 1px 1px rgba(0,0,0,0.04), 0 4px 14px rgba(0,0,0,0.06), 0 12px 30px rgba(0,0,0,0.05);
+
+  --ease: cubic-bezier(.2,.7,.25,1);
+}
+[data-theme="dark"] {
+  --bg: #1a1714;
+  --surface: #252119;
+  --surface-2: #2d2822;
+  --ink: #f3ece0;
+  --ink-2: #d6cdbb;
+  --ink-3: #938878;
+  --ink-4: #6b6153;
+  --line: #3a3229;
+  --line-strong: #4a4138;
+  --accent: #e9894a;
+  --accent-ink: #fbd2a8;
+  --accent-soft: #4a2d16;
+  --accent-soft-2: #3a241a;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background: var(--bg);
+  font-family: 'Assistant', 'Rubik', -apple-system, system-ui, sans-serif;
+  color: var(--ink);
+  overflow: hidden;
+}
+
+.font-display {
+  font-family: 'Reem Kufi', 'Assistant', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.font-body { font-family: 'Assistant', system-ui, sans-serif; }
+
+/* Full-screen app container */
+.app {
+  width: 100%;
+  height: 100dvh;
+  background: var(--bg);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+  overflow: hidden;
+  /* safe area for notch phones */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Status bar — hidden on real devices, they have their own */
+.status-bar { display: none; }
+
+/* Content area */
+.content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding-bottom: 24px; position: relative;
+  scrollbar-width: none;
+}
+.content::-webkit-scrollbar { display: none; }
+
+/* Tab bar */
+.tabbar {
+  position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
+  background: color-mix(in oklab, var(--surface) 82%, transparent);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border-top: 0.5px solid var(--line);
+  padding: 10px 20px 30px;
+  display: flex; justify-content: space-around; align-items: center;
+}
+.tab-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: var(--ink-3); cursor: pointer; font-size: 11px; font-weight: 500;
+  padding: 4px 12px; border-radius: 10px; transition: color 0.15s;
+  min-width: 60px;
+}
+.tab-item.active { color: var(--accent); }
+.tab-item .dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; margin-top: 2px; }
+.tab-item.active .dot { background: var(--accent); }
+
+/* FAB — central, raised above tabbar */
+.fab-wrap {
+  position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%); z-index: 30;
+}
+.fab {
+  width: 62px; height: 62px; border-radius: 50%;
+  background: var(--accent);
+  color: #fff; border: none;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 22px color-mix(in oklab, var(--accent) 40%, transparent), 0 2px 6px rgba(0,0,0,0.12);
+  cursor: pointer;
+  transition: transform 0.18s var(--ease);
+}
+.fab:active { transform: scale(0.93); }
+.fab svg { width: 26px; height: 26px; }
+
+/* Sheet */
+.sheet-backdrop {
+  position: absolute; inset: 0; background: rgba(20,15,8,0.4);
+  z-index: 50; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s var(--ease);
+}
+.sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 60;
+  background: var(--surface);
+  border-radius: 28px 28px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.32s var(--ease);
+  max-height: 92%;
+  display: flex; flex-direction: column;
+  box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
+}
+.sheet.open { transform: translateY(0); }
+.sheet .grab { width: 42px; height: 4px; background: var(--line-strong); border-radius: 3px; margin: 10px auto 0; flex-shrink: 0; }
+
+/* Chips */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-2);
+  font-size: 13px; font-weight: 500;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.chip.active {
+  background: var(--accent-soft); color: var(--accent-ink);
+  border-color: color-mix(in oklab, var(--accent) 30%, transparent);
+}
+.chip.ghost { background: transparent; }
+.chip .x { opacity: 0.5; }
+.chip-lg { padding: 9px 16px; font-size: 15px; border-radius: 14px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 13px 20px; border-radius: 16px;
+  font-family: inherit; font-size: 16px; font-weight: 600;
+  border: none; cursor: pointer; transition: all 0.12s var(--ease);
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:active { transform: scale(0.97); }
+.btn-ghost { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+.btn-text { background: transparent; color: var(--ink-2); padding: 10px 14px; }
+
+/* Card shapes */
+.card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid var(--line);
+}
+
+/* Toast */
+.toast {
+  position: absolute; top: 80px; left: 50%; transform: translate(-50%, -80px);
+  background: var(--ink); color: var(--bg);
+  padding: 12px 20px; border-radius: 99px; font-size: 14px; font-weight: 600;
+  box-shadow: var(--shadow-md); z-index: 200;
+  display: flex; align-items: center; gap: 8px;
+  opacity: 0; transition: all 0.3s var(--ease); pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* Category pill colors */
+.cat { padding: 3px 9px; border-radius: 7px; font-size: 11.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+.cat-finance { background: var(--c-finance-bg); color: var(--c-finance); }
+.cat-health  { background: var(--c-health-bg);  color: var(--c-health);  }
+.cat-home    { background: var(--c-home-bg);    color: var(--c-home);    }
+.cat-family  { background: var(--c-family-bg);  color: var(--c-family);  }
+.cat-work    { background: var(--c-work-bg);    color: var(--c-work);    }
+.cat-car     { background: var(--c-car-bg);     color: var(--c-car);     }
+.cat-other   { background: #ede9f4;             color: #5c4a8a;          }
+
+/* Swipe card */
+.swipe-card {
+  position: absolute; inset: 0;
+  background: var(--surface);
+  border-radius: 28px;
+  box-shadow: var(--shadow-card);
+  padding: 22px;
+  display: flex; flex-direction: column;
+  cursor: grab; user-select: none;
+  will-change: transform;
+}
+.swipe-card:active { cursor: grabbing; }
+
+.decision-badge {
+  position: absolute; top: 30px;
+  padding: 8px 16px; border-radius: 10px;
+  font-family: 'Reem Kufi', sans-serif; font-weight: 600; font-size: 22px;
+  border: 3px solid; letter-spacing: 0.5px;
+  opacity: 0; pointer-events: none; transition: opacity 0.1s;
+}
+.decision-badge.yes { left: 24px;  color: var(--success); border-color: var(--success); transform: rotate(-8deg); }
+.decision-badge.no  { right: 24px; color: var(--ink-3);   border-color: var(--ink-3);   transform: rotate(8deg); }
+.decision-badge.later { top: auto; bottom: 80px; left: 50%; transform: translateX(-50%); color: var(--ink-2); border-color: var(--ink-2); }
+
+/* Tweaks */
+.tweaks {
+  position: fixed; top: 20px; left: 20px; z-index: 500;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 16px; padding: 14px 16px;
+  font-size: 13px; width: 240px; display: none;
+  box-shadow: var(--shadow-lg);
+}
+.tweaks.open { display: block; }
+.tweaks h4 { margin: 0 0 12px; font-family: 'Reem Kufi'; font-size: 18px; font-weight: 500; }
+.tweaks .row { margin-bottom: 10px; }
+.tweaks .row label { display: block; font-size: 11px; color: var(--ink-3); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+.tweaks .swatches { display: flex; gap: 6px; }
+.tweaks .sw { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+.tweaks .sw.active { border-color: var(--ink); transform: scale(1.08); }
+.tweaks select, .tweaks button.t-btn {
+  font-family: inherit; font-size: 13px; padding: 7px 10px; width: 100%;
+  border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface-2); color: var(--ink);
+  cursor: pointer;
+}
+
+/* Jump nav */
+.jump-nav {
+  position: fixed; right: 20px; top: 20px; z-index: 500;
+  background: rgba(30,25,20,0.85); color: #fff;
+  backdrop-filter: blur(10px);
+  border-radius: 999px; padding: 6px; font-size: 12px;
+  display: flex; gap: 2px; box-shadow: var(--shadow-md);
+}
+.jump-nav .j { padding: 6px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; font-weight: 500; opacity: 0.7; }
+.jump-nav .j:hover { opacity: 1; }
+.jump-nav .j.active { background: var(--accent); color: #fff; opacity: 1; }
+
+/* Animations */
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+@keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.anim-in { animation: slide-up 0.35s var(--ease) both; }
+
+/* Segmented */
+.segment {
+  display: flex; background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 2px;
+  border: 1px solid var(--line);
+}
+.segment > div {
+  flex: 1; text-align: center; padding: 8px 10px; border-radius: 9px; font-size: 13px;
+  color: var(--ink-2); font-weight: 500; cursor: pointer; transition: all 0.15s;
+}
+.segment > div.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+
+/* Empty state bg shape */
+.curve-bg {
+  position: absolute; top: 0; left: 0; right: 0; height: 230px;
+  background:
+    radial-gradient(140% 100% at 50% 0%, var(--accent-soft-2) 0%, transparent 70%);
+  pointer-events: none;
+}
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       cards-kit.jsx  —  Shared data, icons, helpers
+  ═══════════════════════════════════════════════════════ -->
+  <script type="text/babel">
+// Shared data + icons + small helpers for Cards app
+
+// Category config (Hebrew labels + class hooks to CSS)
+const CATEGORIES = {
+  finance: { label: 'פיננסי', emoji: '💳', cls: 'cat-finance' },
+  health:  { label: 'בריאות', emoji: '🩺', cls: 'cat-health' },
+  home:    { label: 'בית',    emoji: '🏠', cls: 'cat-home' },
+  family:  { label: 'משפחה',  emoji: '💛', cls: 'cat-family' },
+  work:    { label: 'עבודה',  emoji: '💼', cls: 'cat-work' },
+  car:     { label: 'רכב',    emoji: '🚗', cls: 'cat-car' },
+  other:   { label: 'אחר',   emoji: '📌', cls: 'cat-other' },
+};
+
+const ENERGY = [
+  { k: 1, e: '😴', label: 'מותש' },
+  { k: 2, e: '😌', label: 'רגוע' },
+  { k: 3, e: '🙂', label: 'רגיל' },
+  { k: 4, e: '😊', label: 'ער' },
+  { k: 5, e: '🔥', label: 'דלוק' },
+];
+
+const FOCUS_LEVELS = [
+  { k: 'low', label: 'מפוזר' },
+  { k: 'mid', label: 'בינוני' },
+  { k: 'high', label: 'ממוקד' },
+];
+
+const LOCATIONS = [
+  { k: 'home', label: 'בית', emoji: '🏠' },
+  { k: 'work', label: 'עבודה', emoji: '🏢' },
+  { k: 'on-the-go', label: 'בדרך', emoji: '🚶' },
+  { k: 'errands', label: 'סידורים', emoji: '🛒' },
+];
+
+const WHEN_OPTIONS = [
+  { k: 'morning',   label: 'בחצי יום הראשון', emoji: '🌅' },
+  { k: 'afternoon', label: 'בחצי יום השני',   emoji: '🌇' },
+  { k: 'allday',    label: 'כל היום',          emoji: '☀️' },
+  { k: 'weekdays',  label: 'אמצע שבוע',        emoji: '📅' },
+  { k: 'weekend',   label: 'סוף שבוע',         emoji: '🏖️' },
+];
+
+// Initial task pool — empty so users start fresh
+const INITIAL_TASKS = [];
+
+// ─── Icons (inline SVG, thin stroke style) ───────────────────
+const I = {
+  plus: (s=22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>,
+  home: (s=22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7H10v7H6a2 2 0 0 1-2-2v-9"/></svg>,
+  list: (s=22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>,
+  flash: (s=22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>,
+  user: (s=22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>,
+  mic: (s=22) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>,
+  close: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>,
+  chevRight: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>,
+  chevLeft: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>,
+  check: (s=20) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4 10-10"/></svg>,
+  sparkle: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/></svg>,
+  clock: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>,
+  bolt: (s=16) => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>,
+  call: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M5 4h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>,
+  location: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 22s-7-7.2-7-13a7 7 0 1 1 14 0c0 5.8-7 13-7 13z"/><circle cx="12" cy="9" r="2.5"/></svg>,
+  arrowDown: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>,
+  skip: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 17L17 7M17 17V7H7"/></svg>,
+  pause: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>,
+  undo: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v0a6 6 0 0 1-6 6H8"/></svg>,
+  sliders: (s=18) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 6h8M4 12h4M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="20" cy="18" r="2"/></svg>,
+};
+
+// Status bar
+function StatusBar({ theme = 'light' }) {
+  const fill = theme === 'dark' ? '#fff' : 'var(--ink)';
+  return (
+    <div className="status-bar" dir="ltr">
+      <span>9:41</span>
+      <span className="status-icons" style={{ color: fill }}>
+        <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="0.5"/><rect x="4.5" y="5" width="3" height="6" rx="0.5"/><rect x="9" y="2.5" width="3" height="8.5" rx="0.5"/><rect x="13.5" y="0" width="3" height="11" rx="0.5"/></svg>
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M8 3c2.3 0 4.3.9 5.8 2.3l1.1-1.1C13.1 2.4 10.7 1.3 8 1.3S2.9 2.4 1.1 4.2l1.1 1.1C3.7 3.9 5.7 3 8 3z"/><path d="M8 6.5c1.4 0 2.6.5 3.5 1.4l1.1-1.1C11.3 5.6 9.7 4.8 8 4.8s-3.3.8-4.6 2l1.1 1.1C5.4 7 6.6 6.5 8 6.5z"/><circle cx="8" cy="10" r="1.4"/></svg>
+        <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="22" height="11" rx="3" stroke="currentColor" strokeOpacity="0.4"/><rect x="2" y="2" width="18" height="8" rx="1.5" fill="currentColor"/><path d="M24 4v4c.6-.2 1-.8 1-1.5v-1c0-.7-.4-1.3-1-1.5z" fill="currentColor" fillOpacity="0.4"/></svg>
+      </span>
+    </div>
+  );
+}
+
+// Lightweight slider
+function Slider({ value, onChange, min = 5, max = 180, step = 5, formatLabel }) {
+  const trackRef = React.useRef(null);
+  const pct = ((value - min) / (max - min)) * 100;
+  const setFromX = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(r.width, r.right - clientX)); // RTL
+    const ratio = x / r.width;
+    const raw = min + ratio * (max - min);
+    const snap = Math.round(raw / step) * step;
+    onChange(Math.max(min, Math.min(max, snap)));
+  };
+  const onDown = (e) => {
+    e.preventDefault();
+    setFromX(e.clientX ?? e.touches?.[0]?.clientX);
+    const onMove = (m) => setFromX(m.clientX ?? m.touches?.[0]?.clientX);
+    const onUp = () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp); };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  };
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+        <div style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 500 }}>{formatLabel ? formatLabel(min, max) : ''}</div>
+        <div style={{ fontFamily: 'Reem Kufi', fontSize: 28, fontWeight: 500, color: 'var(--accent)' }}>
+          {formatLabel ? formatLabel(value) : value}
+        </div>
+      </div>
+      <div ref={trackRef} onPointerDown={onDown}
+        style={{ position: 'relative', height: 38, cursor: 'pointer', touchAction: 'none' }}>
+        <div style={{ position: 'absolute', top: 17, left: 0, right: 0, height: 4, borderRadius: 2, background: 'var(--line-strong)' }}/>
+        <div style={{ position: 'absolute', top: 17, right: 0, width: `${pct}%`, height: 4, borderRadius: 2, background: 'var(--accent)' }}/>
+        <div style={{
+          position: 'absolute', top: 8, right: `calc(${pct}% - 12px)`,
+          width: 24, height: 24, borderRadius: '50%', background: '#fff',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)',
+        }}/>
+      </div>
+    </div>
+  );
+}
+
+const TASK_MOODS = [
+  { k: 'nice',       label: 'משימה נחמדה',    emoji: '😊' },
+  { k: 'neutral',    label: 'משימה נייטרלית', emoji: '😐' },
+  { k: 'unpleasant', label: 'משימה מבאסת',    emoji: '😩' },
+];
+
+Object.assign(window, { CATEGORIES, ENERGY, FOCUS_LEVELS, LOCATIONS, WHEN_OPTIONS, TASK_MOODS, INITIAL_TASKS, I, StatusBar, Slider });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════
+       cards-screens.jsx  —  Home, QuickAdd sheet, AllTasks
+  ═══════════════════════════════════════════════════════ -->
+  <script type="text/babel">
+// Screens: Home, Quick Add sheet, All Tasks
+
+function Home({ tasks, onAdd, onPick, onOpenAll, activeTask, onFinishTask, onSkipTask }) {
+  const counts = {
+    all: tasks.filter(t => !t.done).length,
+    urgent: tasks.filter(t => t.priority === 'high' && !t.done).length,
+    done: tasks.filter(t => t.done).length,
+  };
+
+  const stats = [
+    { n: counts.all,    l: 'סה״כ פתוחות', color: 'var(--ink)',     filter: 'all' },
+    { n: counts.urgent, l: 'דחופות',       color: 'var(--accent)',  filter: 'urgent' },
+    { n: counts.done,   l: 'הושלמו',       color: 'var(--success)', filter: 'done' },
+  ];
+
+  return (
+    <div className="content" style={{ position: 'relative' }}>
+      <div className="curve-bg"/>
+      <div style={{ padding: '14px 22px 0', position: 'relative' }}>
+
+        {/* Active task card — shown when a task is in progress */}
+        {activeTask && (
+          <div style={{
+            marginTop: 8, borderRadius: 20,
+            border: '2px solid var(--accent)',
+            background: 'var(--accent-soft-2)',
+            padding: '16px 18px',
+            boxShadow: '0 4px 20px color-mix(in oklab, var(--accent) 15%, transparent)',
+            marginBottom: 0,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <span style={{ fontSize: 14 }}>🎯</span>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                בתהליך עכשיו
+              </div>
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 14 }}>
+              {activeTask.title}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-ghost" onClick={onSkipTask}
+                style={{ flex: 1, fontSize: 13, padding: '10px 8px', color: 'var(--ink-3)' }}>
+                לא הספקתי — לשמור לפעם הבאה
+              </button>
+              <button className="btn btn-primary" onClick={onFinishTask}
+                style={{ flex: 1, fontSize: 14, padding: '10px 8px' }}>
+                {I.check(16)} סיימתי!
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Hero: I have time CTA — always visible */}
+        <div onClick={onPick} style={{
+          marginTop: activeTask ? 12 : 8, borderRadius: 24,
+          background: 'linear-gradient(135deg, var(--accent) 0%, color-mix(in oklab, var(--accent) 75%, #8a3910) 100%)',
+          color: '#fff', padding: '22px 22px', boxShadow: '0 10px 30px color-mix(in oklab, var(--accent) 25%, transparent)',
+          position: 'relative', overflow: 'hidden', cursor: 'pointer',
+        }}>
+          <div style={{ position: 'absolute', top: -30, left: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }}/>
+          <div style={{ position: 'absolute', bottom: -50, left: 20, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }}/>
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.18)', padding: '4px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
+              {I.sparkle(14)} <span>AI מוכן</span>
+            </div>
+            <div className="font-display" style={{ fontSize: 26, fontWeight: 500, marginTop: 12, lineHeight: 1.15 }}>
+              יש לי זמן —<br/>מה כדאי לעשות עכשיו?
+            </div>
+            <div style={{ fontSize: 13, opacity: 0.9, marginTop: 6, fontWeight: 500 }}>
+              ספר לי על הרגע, ואשלוף לך קלפים מתאימים
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 16, fontSize: 15, fontWeight: 600 }}>
+              התחל <span style={{ display: 'inline-flex' }}>{I.chevLeft(16)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats — clickable */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginTop: 16 }}>
+          {stats.map((s) => (
+            <div key={s.filter} className="card" onClick={() => onOpenAll(s.filter)}
+              style={{ padding: '14px 10px', textAlign: 'center', cursor: 'pointer', transition: 'transform 0.12s, box-shadow 0.12s' }}
+              onMouseDown={e => e.currentTarget.style.transform = 'scale(0.96)'}
+              onMouseUp={e => e.currentTarget.style.transform = ''}
+              onMouseLeave={e => e.currentTarget.style.transform = ''}>
+              <div className="font-display" style={{ fontSize: 28, fontWeight: 500, color: s.color, lineHeight: 1 }}>{s.n}</div>
+              <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 500, marginTop: 4 }}>{s.l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick add — enlarged */}
+        <div onClick={onAdd} style={{
+          marginTop: 16, borderRadius: 20, background: 'var(--surface)',
+          border: '1.5px dashed var(--line-strong)',
+          padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+        }}>
+          <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--accent-soft)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {I.plus(20)}
+          </div>
+          <div style={{ flex: 1, fontSize: 15, color: 'var(--ink-3)', fontWeight: 500 }}>משהו חדש עלה לראש?</div>
+          <div style={{ color: 'var(--ink-4)' }}>{I.mic(20)}</div>
+        </div>
+
+        <div style={{ height: 40 }}/>
+      </div>
+    </div>
+  );
+}
+
+function TaskRow({ task, onDone, muted }) {
+  const cat = CATEGORIES[task.cat];
+  const d = task.deadline ? daysFromNow(task.deadline) : null;
+  return (
+    <div className="card" style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, opacity: muted ? 0.55 : 1 }}>
+      <div onClick={onDone} style={{
+        width: 24, height: 24, borderRadius: '50%',
+        border: '1.8px solid var(--line-strong)',
+        flexShrink: 0, cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: task.done ? 'var(--success)' : 'transparent',
+        borderColor: task.done ? 'var(--success)' : 'var(--line-strong)',
+        color: '#fff',
+      }}>
+        {task.done && I.check(14)}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 500, color: 'var(--ink)', textDecoration: task.done ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {task.title}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+          <span className={`cat ${cat.cls}`}>{cat.emoji} {cat.label}</span>
+          <span style={{ fontSize: 12, color: 'var(--ink-3)', display: 'flex', alignItems: 'center', gap: 3 }}>
+            {I.clock(12)} {task.duration}ד׳
+          </span>
+          {d !== null && d <= 2 && <span style={{ fontSize: 12, color: 'var(--danger)', fontWeight: 600 }}>
+            · {d === 0 ? 'היום' : d === 1 ? 'מחר' : `עוד ${d}י׳`}
+          </span>}
+        </div>
+      </div>
+      {task.priority === 'high' && !task.done && (
+        <div style={{ color: 'var(--accent)' }}>{I.bolt(14)}</div>
+      )}
+    </div>
+  );
+}
+
+function daysFromNow(iso) {
+  const today = new Date('2026-04-18');
+  const d = new Date(iso);
+  return Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+}
+
+// ─── Quick Add sheet ────────────────────────────────────────
+function QuickAddSheet({ open, onClose, onSave }) {
+  const [text, setText] = React.useState('');
+  const [stage, setStage] = React.useState('input'); // input | ai
+  const [pendingTasks, setPendingTasks] = React.useState([]);
+  const [currentIdx, setCurrentIdx] = React.useState(0);
+  const [confirmedTasks, setConfirmedTasks] = React.useState([]);
+  const [ai, setAi] = React.useState(null);
+  const [listening, setListening] = React.useState(false);
+  const [speechError, setSpeechError] = React.useState(null);
+  const textareaRef = React.useRef(null);
+  const recognitionRef = React.useRef(null);
+  const baseTextRef = React.useRef('');
+
+  React.useEffect(() => {
+    if (!open) {
+      recognitionRef.current?.stop();
+      setText(''); setStage('input'); setAi(null);
+      setPendingTasks([]); setCurrentIdx(0); setConfirmedTasks([]);
+      setSpeechError(null);
+    } else {
+      const t = setTimeout(() => { if (textareaRef.current) textareaRef.current.focus(); }, 350);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  const analyzeOne = (t) => {
+    let cat = 'home', duration = 15, energy = 3, priority = 'mid', mode = 'screen', when = ['allday'], mood = 'neutral';
+    if (/ביטוח|תשלום|חשבונית|אשראי|ארנונה|מיסים|בנק/i.test(t)) { cat = 'finance'; mode = 'screen'; priority = 'high'; mood = 'unpleasant'; }
+    else if (/רופא|שיניים|ויטמין|ספורט|ריצה|רפואי/i.test(t)) { cat = 'health'; }
+    else if (/מוסך|רכב|טיפול|אוטו/i.test(t)) { cat = 'car'; mode = 'call'; mood = 'unpleasant'; }
+    else if (/אמא|אבא|ילד|ילדה|מתנה|בן\s?דוד/i.test(t)) { cat = 'family'; mood = 'nice'; }
+    else if (/מייל|עבודה|פגישה|דוח|קובי|מנהל/i.test(t)) { cat = 'work'; }
+    if (/להתקשר|שיחה|טלפון/i.test(t)) { mode = 'call'; duration = 5; }
+    if (/לקנות|להזמין/i.test(t)) { duration = 25; }
+    if (/לסדר|לנקות|להעביר|להזיז/i.test(t)) { mode = 'physical'; duration = 25; energy = 4; }
+    if (/דחוף|היום|מחר|חייב/i.test(t)) priority = 'high';
+    if (/בוקר|בבוקר/i.test(t)) when = ['morning'];
+    else if (/ערב|אחר.?הצהריים/i.test(t)) when = ['afternoon'];
+    else if (/שבת|שישי|סוף.?שבוע/i.test(t)) when = ['weekend'];
+    return { title: t, cat, duration, energy, priority, mode, when, mood };
+  };
+
+  const analyze = () => {
+    if (!text.trim()) return;
+    const parts = text.split(',').map(s => s.trim()).filter(Boolean);
+    setPendingTasks(parts);
+    setCurrentIdx(0);
+    setConfirmedTasks([]);
+    setAi(analyzeOne(parts[0]));
+    setStage('ai');
+  };
+
+  const handleConfirm = () => {
+    const newConfirmed = [...confirmedTasks, ai];
+    if (currentIdx < pendingTasks.length - 1) {
+      setConfirmedTasks(newConfirmed);
+      const nextIdx = currentIdx + 1;
+      setCurrentIdx(nextIdx);
+      setAi(analyzeOne(pendingTasks[nextIdx]));
+    } else {
+      newConfirmed.forEach(t => onSave(t));
+      onClose();
+    }
+  };
+
+  const handleBack = () => {
+    if (currentIdx === 0) {
+      setStage('input');
+    } else {
+      const prevIdx = currentIdx - 1;
+      setAi(confirmedTasks[prevIdx]);
+      setConfirmedTasks(confirmedTasks.slice(0, prevIdx));
+      setCurrentIdx(prevIdx);
+    }
+  };
+
+  const toggleWhen = (k) => {
+    const cur = ai.when || [];
+    const next = cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k];
+    setAi({ ...ai, when: next.length ? next : [k] });
+  };
+
+  const startListening = () => {
+    setSpeechError(null);
+
+    // Stop if already listening
+    if (listening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setSpeechError('הדפדפן לא תומך בזיהוי קול — נסי Chrome או Safari');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'he-IL';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognitionRef.current = recognition;
+    baseTextRef.current = text; // preserve any text already typed
+
+    recognition.onstart = () => setListening(true);
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          // Append confirmed words to base, add comma separator if needed
+          const sep = baseTextRef.current && !baseTextRef.current.endsWith(',') ? ', ' : '';
+          baseTextRef.current += sep + t.trim();
+        } else {
+          interim = t;
+        }
+      }
+      setText(baseTextRef.current + (interim ? (baseTextRef.current ? ' ' : '') + interim : ''));
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+      setText(baseTextRef.current);
+      recognitionRef.current = null;
+    };
+
+    recognition.onerror = (e) => {
+      setListening(false);
+      recognitionRef.current = null;
+      if (e.error === 'not-allowed') {
+        setSpeechError('גישה למיקרופון נדחתה — אפשרי גישה בהגדרות הדפדפן');
+      } else if (e.error !== 'aborted' && e.error !== 'no-speech') {
+        setSpeechError('שגיאה בזיהוי קול: ' + e.error);
+      }
+    };
+
+    recognition.start();
+  };
+
+  const isLast = currentIdx === pendingTasks.length - 1;
+  const total = pendingTasks.length;
+
+  return (
+    <>
+      <div className={`sheet-backdrop ${open ? 'open' : ''}`} onClick={onClose}/>
+      <div className={`sheet ${open ? 'open' : ''}`} style={{ minHeight: 400 }}>
+        <div className="grab"/>
+        <div style={{ padding: '16px 22px 24px', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto' }}>
+          {stage === 'input' && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <div className="font-display" style={{ fontSize: 22, fontWeight: 500 }}>משימה חדשה</div>
+                <div onClick={onClose} style={{ padding: 8, cursor: 'pointer', color: 'var(--ink-3)' }}>{I.close(20)}</div>
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 14 }}>
+                כתוב בחופשיות, אני אסדר. כמה משימות? הפרד בפסיקים.{' '}
+                {text.length > 0 && <span style={{ color: 'var(--accent)' }}>AI מוכן לעזור →</span>}
+              </div>
+
+              <div style={{
+                background: 'var(--surface-2)', borderRadius: 18,
+                border: `1.5px solid ${listening ? 'var(--accent)' : 'var(--line)'}`,
+                padding: '14px 16px', minHeight: 120,
+                transition: 'border-color 0.2s',
+              }}>
+                <textarea
+                  ref={textareaRef}
+                  value={text}
+                  onChange={e => setText(e.target.value)}
+                  placeholder={'למשל: להתקשר למוסך, לשלם ביטוח לאומי, להזמין מתנה לאמא…'}
+                  style={{
+                    width: '100%', border: 'none', outline: 'none', background: 'transparent',
+                    fontFamily: 'inherit', fontSize: 16, color: 'var(--ink)', minHeight: 90,
+                    resize: 'none', lineHeight: 1.45, direction: 'rtl',
+                  }}
+                />
+              </div>
+
+              {/* Multi-task preview */}
+              {text.includes(',') && (
+                <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {text.split(',').map(s => s.trim()).filter(Boolean).map((t, i) => (
+                    <div key={i} style={{
+                      fontSize: 12, padding: '4px 10px', borderRadius: 999,
+                      background: 'var(--accent-soft)', color: 'var(--accent-ink)',
+                      border: '1px solid color-mix(in oklab, var(--accent) 25%, transparent)',
+                      fontWeight: 500,
+                    }}>{i + 1}. {t}</div>
+                  ))}
+                </div>
+              )}
+
+              {speechError && (
+                <div style={{ fontSize: 12, color: 'var(--danger)', background: 'color-mix(in oklab, var(--danger) 8%, transparent)', border: '1px solid color-mix(in oklab, var(--danger) 20%, transparent)', borderRadius: 10, padding: '8px 12px', marginTop: 8, direction: 'rtl' }}>
+                  {speechError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 14, alignItems: 'center' }}>
+                <button onClick={startListening} title={listening ? 'לחץ לעצירה' : 'לחץ להקלטה'} style={{
+                  width: 48, height: 48, borderRadius: '50%',
+                  background: listening ? 'var(--accent)' : 'var(--surface-2)',
+                  color: listening ? '#fff' : 'var(--ink-2)',
+                  border: listening ? '2px solid var(--accent)' : '1px solid var(--line)',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  animation: listening ? 'pulse 1.2s ease-in-out infinite' : 'none',
+                  boxShadow: listening ? '0 0 0 6px color-mix(in oklab, var(--accent) 18%, transparent)' : 'none',
+                  transition: 'background 0.15s, box-shadow 0.15s',
+                }}>
+                  {I.mic(22)}
+                </button>
+                <div style={{ flex: 1 }}/>
+                <button className="btn btn-ghost" onClick={onClose}>ביטול</button>
+                <button className="btn btn-primary" onClick={analyze} disabled={!text.trim()}
+                  style={{ opacity: text.trim() ? 1 : 0.5 }}>
+                  {I.sparkle(16)} סדר לי
+                </button>
+              </div>
+            </>
+          )}
+
+          {stage === 'ai' && ai && (
+            <div className="anim-in">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent-soft)', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {I.sparkle(16)}
+                  </div>
+                  <div>
+                    <div className="font-display" style={{ fontSize: 18, fontWeight: 500 }}>
+                      {total > 1 ? `משימה ${currentIdx + 1} מתוך ${total}` : 'הנה מה שהבנתי'}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>תטה כל תג אם צריך לשנות</div>
+                  </div>
+                </div>
+                <div onClick={handleBack} style={{ padding: 8, cursor: 'pointer', color: 'var(--ink-3)' }}>
+                  {I.undo(18)}
+                </div>
+              </div>
+
+              {/* Progress dots for multi-task */}
+              {total > 1 && (
+                <div style={{ display: 'flex', gap: 5, justifyContent: 'center', marginBottom: 12 }}>
+                  {pendingTasks.map((_, i) => (
+                    <div key={i} style={{
+                      height: 7, borderRadius: 4,
+                      width: i === currentIdx ? 20 : 7,
+                      background: i < currentIdx ? 'var(--success)' : i === currentIdx ? 'var(--accent)' : 'var(--line-strong)',
+                      transition: 'all 0.25s var(--ease)',
+                    }}/>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ background: 'var(--surface-2)', border: '1px solid var(--line)', borderRadius: 18, padding: '14px 16px', marginBottom: 16 }}>
+                <div style={{ fontSize: 16, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.4 }}>{ai.title}</div>
+              </div>
+
+              {/* Category */}
+              <TagSection label="קטגוריה">
+                {Object.entries(CATEGORIES).map(([k, v]) => (
+                  <span key={k} className={`chip ${ai.cat === k ? 'active' : ''}`} onClick={() => setAi({ ...ai, cat: k })}>
+                    {v.emoji} {v.label}
+                  </span>
+                ))}
+              </TagSection>
+
+              {/* Duration slider */}
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>כמה זמן</div>
+                <Slider
+                  value={ai.duration}
+                  onChange={(v) => setAi({ ...ai, duration: v })}
+                  min={5} max={120} step={5}
+                  formatLabel={(v) => typeof v === 'number'
+                    ? (v >= 60 ? `${Math.floor(v/60)}ש׳${v % 60 ? ' ' + (v % 60) + 'ד׳' : ''}` : `${v} דק׳`)
+                    : ''}
+                />
+              </div>
+
+              {/* Energy */}
+              <TagSection label="רמת אנרגיה">
+                {ENERGY.map(en => (
+                  <span key={en.k} className={`chip ${ai.energy === en.k ? 'active' : ''}`} onClick={() => setAi({ ...ai, energy: en.k })}>
+                    {en.e} {en.label}
+                  </span>
+                ))}
+              </TagSection>
+
+              {/* Priority */}
+              <TagSection label="עדיפות">
+                {['low', 'mid', 'high'].map(p => (
+                  <span key={p} className={`chip ${ai.priority === p ? 'active' : ''}`} onClick={() => setAi({ ...ai, priority: p })}>
+                    {p === 'high' ? '⚡ דחוף' : p === 'mid' ? 'רגיל' : 'יום יבוא'}
+                  </span>
+                ))}
+              </TagSection>
+
+              {/* When — multi-select */}
+              <TagSection label="מתי אפשר לבצע?">
+                {WHEN_OPTIONS.map(w => (
+                  <span key={w.k} className={`chip ${(ai.when || []).includes(w.k) ? 'active' : ''}`} onClick={() => toggleWhen(w.k)}>
+                    {w.emoji} {w.label}
+                  </span>
+                ))}
+              </TagSection>
+
+              {/* Mood */}
+              <TagSection label="איזה סוג משימה?">
+                {TASK_MOODS.map(m => (
+                  <span key={m.k} className={`chip ${ai.mood === m.k ? 'active' : ''}`} onClick={() => setAi({ ...ai, mood: m.k })}>
+                    {m.emoji} {m.label}
+                  </span>
+                ))}
+              </TagSection>
+
+              <div style={{ display: 'flex', gap: 8, marginTop: 10, alignItems: 'center' }}>
+                <button className="btn btn-ghost" onClick={handleBack}>
+                  {I.undo(16)} חזרה
+                </button>
+                <div style={{ flex: 1 }}/>
+                <button className="btn btn-primary" onClick={handleConfirm}>
+                  {isLast
+                    ? <>{I.check(18)} {total > 1 ? `הוסף ${total} משימות` : 'נוסיף לערימה'}</>
+                    : <>הבא {I.chevLeft(16)}</>}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TagSection({ label, children }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ fontSize: 11, color: 'var(--ink-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>{label}</div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{children}</div>
+    </div>
+  );
+}
+
+// ─── All Tasks list ─────────────────────────────────────────
+function AllTasks({ tasks, onToggleDone, onAdd, onBack, initialFilter = 'all' }) {
+  const [filter, setFilter] = React.useState(initialFilter);
+  React.useEffect(() => { setFilter(initialFilter); }, [initialFilter]);
+  const groups = Object.keys(CATEGORIES);
+  const filtered = filter === 'all' ? tasks
+    : filter === 'done'   ? tasks.filter(t => t.done)
+    : filter === 'urgent' ? tasks.filter(t => t.priority === 'high' && !t.done)
+    : tasks.filter(t => t.cat === filter);
+  const open = filtered.filter(t => !t.done);
+  const done = filtered.filter(t => t.done);
+  return (
+    <div className="content">
+      <div style={{ padding: '14px 22px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <div onClick={onBack} style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--surface-2)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink-2)', flexShrink: 0 }}>
+            {I.chevRight(18)}
+          </div>
+          <div className="font-display" style={{ fontSize: 28, fontWeight: 500 }}>כל המשימות</div>
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 2 }}>{open.length} פתוחות · {done.length} הושלמו</div>
+
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginTop: 14, paddingBottom: 6, marginInline: -22, paddingInline: 22 }}>
+          <span className={`chip ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>הכל</span>
+          <span className={`chip ${filter === 'urgent' ? 'active' : ''}`} onClick={() => setFilter('urgent')}>⚡ דחופות</span>
+          {groups.map(k => {
+            const c = CATEGORIES[k];
+            const n = tasks.filter(t => t.cat === k && !t.done).length;
+            if (n === 0) return null;
+            return <span key={k} className={`chip ${filter === k ? 'active' : ''}`} onClick={() => setFilter(k)}>
+              {c.emoji} {c.label} · {n}
+            </span>;
+          })}
+          <span className={`chip ${filter === 'done' ? 'active' : ''}`} onClick={() => setFilter('done')}>✓ הושלמו</span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+          {open.map(t => <TaskRow key={t.id} task={t} onDone={() => onToggleDone(t.id)}/>)}
+        </div>
+
+        {done.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4, marginTop: 22, marginBottom: 8 }}>
+              הושלמו
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {done.map(t => <TaskRow key={t.id} task={t} onDone={() => onToggleDone(t.id)} muted/>)}
+            </div>
+          </>
+        )}
+
+        <div style={{ height: 40 }}/>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { Home, QuickAddSheet, AllTasks, TaskRow, daysFromNow, TagSection });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════
+       cards-pick.jsx  —  PickFlow: Context → Swipe → DoNow → Complete
+  ═══════════════════════════════════════════════════════ -->
+  <script type="text/babel">
+// Pick Task flow: Context → Swipe deck → Do Now → Complete
+
+function PickFlow({ tasks, onStartTask, onExit }) {
+  const [stage, setStage] = React.useState('context');
+  const [ctx, setCtx] = React.useState({ duration: 30, energy: 3, mood: 'neutral' });
+  const [queue, setQueue] = React.useState([]);
+  const [startedTask, setStartedTask] = React.useState(null);
+  const [stats, setStats] = React.useState({ yes: 0, later: 0, skip: 0 });
+
+  const buildQueue = (c) => {
+    const scored = tasks.filter(t => !t.done).map(t => {
+      let score = 100;
+      if (t.duration > c.duration) score -= 60;
+      else if (t.duration > c.duration * 0.8) score -= 10;
+      score -= Math.abs(t.energy - c.energy) * 12;
+      if (t.priority === 'high') score += 25;
+      if (t.priority === 'low') score -= 10;
+      if (t.deadline) {
+        const d = daysFromNow(t.deadline);
+        if (d <= 1) score += 30; else if (d <= 3) score += 15;
+      }
+      if (t.mood && c.mood && t.mood !== c.mood) score -= 15;
+      return { ...t, score: Math.max(0, Math.min(100, Math.round(score))) };
+    });
+    return scored.filter(t => t.score > 20).sort((a, b) => b.score - a.score).slice(0, 8);
+  };
+
+  const startSwipe = () => {
+    const q = buildQueue(ctx);
+    setQueue(q);
+    setStage('swipe');
+  };
+
+  const handleSwipe = (dir, task) => {
+    setStats(s => ({
+      ...s,
+      yes: dir === 'yes' ? s.yes + 1 : s.yes,
+      later: dir === 'later' ? s.later + 1 : s.later,
+      skip: dir === 'no' ? s.skip + 1 : s.skip,
+    }));
+    if (dir === 'yes') {
+      setStartedTask(task);
+      setStage('started');
+      return;
+    }
+    setQueue(q => q.slice(1));
+  };
+
+  if (stage === 'context') return <ContextScreen ctx={ctx} setCtx={setCtx} onContinue={startSwipe} onExit={onExit}/>;
+  if (stage === 'swipe') {
+    if (queue.length === 0) {
+      return <EmptyQueue onExit={onExit} ctx={ctx} onReconfigure={() => setStage('context')} stats={stats}/>;
+    }
+    return <SwipeScreen queue={queue} onSwipe={handleSwipe} onExit={onExit} ctx={ctx} stats={stats}/>;
+  }
+  if (stage === 'started' && startedTask) {
+    return <StartedScreen task={startedTask} onGoHome={() => onStartTask(startedTask)}/>;
+  }
+  return null;
+}
+
+// ── Step 1: Context ───────────────────────────────────────
+function ContextScreen({ ctx, setCtx, onContinue, onExit }) {
+  return (
+    <div className="content" style={{ paddingBottom: 20 }}>
+      <div style={{ padding: '14px 22px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <div onClick={onExit} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink-2)' }}>
+            {I.close(18)}
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--ink-3)', fontWeight: 500 }}>שלב 1 מ־2</div>
+        </div>
+
+        <div className="font-display" style={{ fontSize: 28, fontWeight: 500, lineHeight: 1.15 }}>
+          מה מצבך<br/>כרגע?
+        </div>
+        <div style={{ fontSize: 14, color: 'var(--ink-3)', marginTop: 6 }}>
+          אשלוף קלפים מותאמים לפי הסטטוס הנוכחי שלך
+        </div>
+
+        <div className="card" style={{ padding: '18px 16px 14px', marginTop: 22 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            {I.clock(18)} <span style={{ fontWeight: 600, fontSize: 15 }}>כמה זמן יש לך?</span>
+          </div>
+          <Slider value={ctx.duration} onChange={(v) => setCtx({ ...ctx, duration: v })} min={5} max={120} step={5}
+            formatLabel={(v) => v >= 60 ? `${Math.floor(v/60)}ש׳ ${v%60 ? (v%60)+'ד׳' : ''}` : `${v} דק׳`}/>
+        </div>
+
+        <div className="card" style={{ padding: '16px', marginTop: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 18 }}>💪</span><span style={{ fontWeight: 600, fontSize: 15 }}>מה האנרגיה?</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between' }}>
+            {ENERGY.map(en => (
+              <div key={en.k} onClick={() => setCtx({ ...ctx, energy: en.k })} style={{
+                flex: 1, padding: '10px 4px', borderRadius: 12, textAlign: 'center', cursor: 'pointer',
+                background: ctx.energy === en.k ? 'var(--accent-soft)' : 'var(--surface-2)',
+                border: ctx.energy === en.k ? '1.5px solid var(--accent)' : '1px solid var(--line)',
+                transition: 'all 0.15s',
+              }}>
+                <div style={{ fontSize: 22, lineHeight: 1 }}>{en.e}</div>
+                <div style={{ fontSize: 10.5, color: ctx.energy === en.k ? 'var(--accent-ink)' : 'var(--ink-3)', marginTop: 4, fontWeight: 500 }}>
+                  {en.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card" style={{ padding: '16px', marginTop: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <span style={{ fontSize: 18 }}>🎭</span><span style={{ fontWeight: 600, fontSize: 15 }}>איזה סוג משימה מתאים לך?</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {TASK_MOODS.map(m => (
+              <div key={m.k} onClick={() => setCtx({ ...ctx, mood: m.k })} style={{
+                flex: 1, padding: '12px 6px', borderRadius: 14, textAlign: 'center', cursor: 'pointer',
+                background: ctx.mood === m.k ? 'var(--accent-soft)' : 'var(--surface-2)',
+                border: ctx.mood === m.k ? '1.5px solid var(--accent)' : '1px solid var(--line)',
+                transition: 'all 0.15s',
+              }}>
+                <div style={{ fontSize: 26, lineHeight: 1 }}>{m.emoji}</div>
+                <div style={{ fontSize: 11, color: ctx.mood === m.k ? 'var(--accent-ink)' : 'var(--ink-3)', marginTop: 6, fontWeight: 600, lineHeight: 1.3 }}>
+                  {m.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button className="btn btn-primary" onClick={onContinue}
+          style={{ width: '100%', marginTop: 18, padding: '16px', fontSize: 17 }}>
+          {I.sparkle(18)} מצא לי משימות
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 2: Swipe ─────────────────────────────────────────
+function SwipeScreen({ queue, onSwipe, onExit, ctx, stats }) {
+  const top = queue[0];
+  const next = queue[1];
+  const remaining = queue.length;
+  const total = remaining + stats.yes + stats.later + stats.skip;
+  const progress = total > 0 ? ((stats.yes + stats.later + stats.skip) / total) * 100 : 0;
+
+  const moodEmoji = (TASK_MOODS.find(m => m.k === ctx.mood) || TASK_MOODS[1]).emoji;
+  const ctxSummary = `${ctx.duration}ד׳ · ${ENERGY.find(e=>e.k===ctx.energy).e} · ${moodEmoji}`;
+
+  return (
+    <div className="content" style={{ padding: '14px 22px 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div onClick={onExit} style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--surface)', border: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--ink-2)' }}>
+          {I.close(18)}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--ink-3)', background: 'var(--surface-2)', padding: '6px 12px', borderRadius: 999, border: '1px solid var(--line)' }}>
+          {ctxSummary}
+        </div>
+        <div style={{ width: 38 }}/>
+      </div>
+
+      <div style={{ height: 4, background: 'var(--line)', borderRadius: 2, overflow: 'hidden', marginBottom: 14 }}>
+        <div style={{ width: `${progress}%`, height: '100%', background: 'var(--accent)', transition: 'width 0.3s' }}/>
+      </div>
+
+      {/* Direction hint pills */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          background: 'color-mix(in oklab, var(--success) 12%, transparent)',
+          border: '1px solid color-mix(in oklab, var(--success) 30%, transparent)',
+          color: 'var(--success)', padding: '6px 12px', borderRadius: 999, fontSize: 13, fontWeight: 600,
+        }}>
+          {I.check(14)} <span>התחל ←</span>
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--ink-4)', fontWeight: 500 }}>נשאר {remaining}</div>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 5,
+          background: 'var(--surface-2)', border: '1px solid var(--line)',
+          color: 'var(--ink-3)', padding: '6px 12px', borderRadius: 999, fontSize: 13, fontWeight: 600,
+        }}>
+          <span>→ הבא</span> {I.chevLeft(14)}
+        </div>
+      </div>
+
+      {/* Carousel card area — extends to screen edges */}
+      <div style={{ position: 'relative', margin: '0 -22px', flex: 1, minHeight: 400, overflow: 'hidden' }}>
+        {/* Next card peeking from left (RTL: swiping right = next, so next peeks from right edge) */}
+        {next && (
+          <div style={{
+            position: 'absolute', top: 12, right: -12, width: '82%', height: 370,
+            transform: 'scale(0.92)', transformOrigin: 'right center', opacity: 0.55,
+            pointerEvents: 'none',
+          }}>
+            <div className="swipe-card" style={{ cursor: 'default' }}>
+              <TaskCardContent task={next} preview/>
+            </div>
+          </div>
+        )}
+        {/* Current draggable card, centered */}
+        {top && (
+          <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 'calc(100% - 44px)', bottom: 10 }}>
+            <DraggableCard key={top.id} task={top} onSwipe={(d) => onSwipe(d, top)}/>
+          </div>
+        )}
+      </div>
+
+      {/* Action buttons — simplified */}
+      <div style={{ display: 'flex', gap: 8, padding: '12px 0 4px', alignItems: 'center' }}>
+        <button className="btn btn-ghost" style={{ flex: 1, padding: '12px 8px', fontSize: 14 }}
+          onClick={() => onSwipe('later', top)}>
+          {I.arrowDown(16)} אחר כך
+        </button>
+        <button className="btn btn-ghost" style={{ flex: 1, padding: '12px 8px', fontSize: 14 }}
+          onClick={() => onSwipe('no', top)}>
+          הבא {I.chevLeft(16)}
+        </button>
+        <button className="btn btn-primary" style={{ flex: 1.4, padding: '12px 8px', fontSize: 14 }}
+          onClick={() => onSwipe('yes', top)}>
+          {I.check(16)} התחל
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ActionBtn({ children, color, size = 52, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      width: size, height: size, borderRadius: '50%',
+      background: 'var(--surface)', color,
+      border: '1.5px solid var(--line-strong)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
+      transition: 'transform 0.12s',
+    }} onMouseDown={e => e.currentTarget.style.transform = 'scale(0.92)'}
+       onMouseUp={e => e.currentTarget.style.transform = ''}
+       onMouseLeave={e => e.currentTarget.style.transform = ''}>
+      {children}
+    </button>
+  );
+}
+
+// Draggable swipe card
+function DraggableCard({ task, onSwipe }) {
+  const [drag, setDrag] = React.useState({ x: 0, y: 0, active: false });
+  const [exiting, setExiting] = React.useState(null);
+  const startRef = React.useRef(null);
+
+  const onDown = (e) => {
+    e.preventDefault();
+    const pt = e.touches?.[0] || e;
+    startRef.current = { x: pt.clientX, y: pt.clientY };
+    setDrag({ x: 0, y: 0, active: true });
+  };
+  const onMove = (e) => {
+    if (!startRef.current) return;
+    const pt = e.touches?.[0] || e;
+    setDrag({
+      x: pt.clientX - startRef.current.x,
+      y: pt.clientY - startRef.current.y,
+      active: true,
+    });
+  };
+  const onUp = () => {
+    if (!startRef.current) return;
+    const { x, y } = drag;
+    const threshold = 100;
+    if (x > threshold) { setExiting('no'); setTimeout(() => onSwipe('no'), 220); }   // RIGHT = הבא (next)
+    else if (x < -threshold) { setExiting('yes'); setTimeout(() => onSwipe('yes'), 220); } // LEFT = התחל (start)
+    else if (y > threshold) { setExiting('later'); setTimeout(() => onSwipe('later'), 220); }
+    else setDrag({ x: 0, y: 0, active: false });
+    startRef.current = null;
+  };
+
+  React.useEffect(() => {
+    if (!drag.active) return;
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  });
+
+  const rot = drag.x * 0.08;
+  let tx = drag.x, ty = drag.y, op = 1;
+  if (exiting === 'yes') { tx = -600; ty = 80; op = 0; }  // yes exits LEFT (start)
+  else if (exiting === 'no') { tx = 600; ty = 80; op = 0; } // no exits RIGHT (next)
+  else if (exiting === 'later') { ty = 800; op = 0; }
+
+  // yes = LEFT drag (negative x), no = RIGHT drag (positive x)
+  const yesOpacity = Math.min(1, Math.max(0, -drag.x / 100));
+  const noOpacity = Math.min(1, Math.max(0, drag.x / 100));
+  const laterOpacity = Math.min(1, Math.max(0, drag.y / 100));
+
+  return (
+    <div
+      onPointerDown={onDown}
+      style={{
+        position: 'absolute', inset: 0,
+        transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg)`,
+        opacity: op,
+        transition: drag.active ? 'none' : 'transform 0.22s var(--ease), opacity 0.22s',
+        touchAction: 'none',
+      }}>
+      <div className="swipe-card" style={{ height: '100%' }}>
+        <div className="decision-badge yes" style={{ opacity: yesOpacity }}>מתחיל!</div>
+        <div className="decision-badge no" style={{ opacity: noOpacity }}>הבא</div>
+        <div className="decision-badge later" style={{ opacity: laterOpacity }}>אחר כך</div>
+        <TaskCardContent task={task}/>
+      </div>
+    </div>
+  );
+}
+
+function TaskCardContent({ task, preview }) {
+  const cat = CATEGORIES[task.cat];
+  const en = ENERGY.find(e => e.k === task.energy);
+  const focusLabel = FOCUS_LEVELS.find(f => f.k === task.focus)?.label;
+  const reason = getReason(task);
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span className={`cat ${cat.cls}`} style={{ fontSize: 13, padding: '5px 10px' }}>
+          {cat.emoji} {cat.label}
+        </span>
+        {task.priority === 'high' && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: 'var(--accent)', fontSize: 12, fontWeight: 700, background: 'var(--accent-soft)', padding: '4px 10px', borderRadius: 999 }}>
+            {I.bolt(12)} דחוף
+          </span>
+        )}
+      </div>
+
+      <div className="font-display" style={{ fontSize: 26, fontWeight: 500, color: 'var(--ink)', lineHeight: 1.2, marginTop: 18 }}>
+        {task.title}
+      </div>
+
+      {!preview && (
+        <>
+          <div style={{
+            marginTop: 14,
+            background: 'var(--accent-soft-2)', border: '1px solid color-mix(in oklab, var(--accent) 20%, transparent)',
+            borderRadius: 14, padding: '10px 12px',
+            display: 'flex', gap: 8, alignItems: 'flex-start',
+          }}>
+            <span style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 1 }}>{I.sparkle(16)}</span>
+            <div style={{ fontSize: 13, color: 'var(--accent-ink)', lineHeight: 1.4 }}>{reason}</div>
+          </div>
+
+          <div style={{ marginTop: 'auto', paddingTop: 18 }}>
+            <div style={{ height: 1, background: 'var(--line)', marginBottom: 14 }}/>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              <Stat label="זמן" value={`${task.duration}ד׳`}/>
+              <Stat label="אנרגיה" value={en.e}/>
+              <Stat label="ריכוז" value={focusLabel}/>
+              <Stat label="התאמה" value={`${task.score || 90}%`} accent/>
+            </div>
+            {task.deadline && (
+              <div style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-3)', textAlign: 'center' }}>
+                דדליין: {new Date(task.deadline).toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, accent }) {
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div className="font-display" style={{ fontSize: 20, fontWeight: 500, color: accent ? 'var(--accent)' : 'var(--ink)' }}>{value}</div>
+      <div style={{ fontSize: 10.5, color: 'var(--ink-3)', textTransform: 'uppercase', letterSpacing: 0.3, marginTop: 2, fontWeight: 600 }}>{label}</div>
+    </div>
+  );
+}
+
+function getReason(task) {
+  const reasons = [
+    task.priority === 'high' && 'עדיפות גבוהה',
+    task.deadline && daysFromNow(task.deadline) <= 3 && 'דדליין קרוב',
+    task.duration <= 10 && 'ניצחון קצר ומהיר',
+    task.focus === 'low' && 'לא דורש ריכוז',
+    task.mode === 'physical' && 'יתן לך תזוזה',
+  ].filter(Boolean);
+  if (reasons.length === 0) return 'מתאים לקונטקסט הנוכחי שלך';
+  return reasons.slice(0, 2).join(' · ');
+}
+
+// ── Step 3: Started ─────────────────────────────────────────
+function StartedScreen({ task, onGoHome }) {
+  const cat = CATEGORIES[task.cat];
+  return (
+    <div className="content" style={{ padding: '14px 22px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+      <div style={{ flex: 1 }}/>
+
+      <div style={{ fontSize: 64, animation: 'pulse 2s ease-in-out infinite' }}>🎯</div>
+
+      <div className="font-display" style={{ fontSize: 28, fontWeight: 500, marginTop: 18, lineHeight: 1.2 }}>
+        בהצלחה!
+      </div>
+
+      <div style={{ fontSize: 15, color: 'var(--ink-3)', marginTop: 10, maxWidth: 280, lineHeight: 1.5 }}>
+        כשתסיים, תאשר שסיימת את המשימה בדף הבית
+      </div>
+
+      <div className="card" style={{ marginTop: 24, padding: '16px 18px', width: '100%', textAlign: 'right' }}>
+        <span className={`cat ${cat.cls}`}>{cat.emoji} {cat.label}</span>
+        <div className="font-display" style={{ fontSize: 20, fontWeight: 500, marginTop: 8, lineHeight: 1.3, color: 'var(--ink)' }}>
+          {task.title}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 13, color: 'var(--ink-3)' }}>
+          {I.clock(14)} {task.duration} דקות
+        </div>
+      </div>
+
+      <div style={{ flex: 1 }}/>
+
+      <button className="btn btn-primary" onClick={onGoHome}
+        style={{ width: '100%', padding: '16px', fontSize: 17, marginBottom: 20 }}>
+        {I.home(18)} חזרה לדף הבית
+      </button>
+    </div>
+  );
+}
+
+// ── (Legacy DoNow kept for reference — not used) ──────────
+function DoNowScreen({ task, onComplete, onPause }) {
+  const [sec, setSec] = React.useState(0);
+  const [paused, setPaused] = React.useState(false);
+  const target = task.duration * 60;
+
+  React.useEffect(() => {
+    if (paused) return;
+    const iv = setInterval(() => setSec(s => s + 1), 1000);
+    return () => clearInterval(iv);
+  }, [paused]);
+
+  const cat = CATEGORIES[task.cat];
+  const pct = Math.min(100, (sec / target) * 100);
+  const mm = String(Math.floor(sec / 60)).padStart(2, '0');
+  const ss = String(sec % 60).padStart(2, '0');
+
+  const subtasks = getSubtasks(task);
+  const [checked, setChecked] = React.useState(new Set());
+
+  return (
+    <div className="content" style={{ padding: '14px 22px 0', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div onClick={onPause} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: 'var(--ink-3)', cursor: 'pointer', fontWeight: 500 }}>
+          {I.chevRight(16)} חזור לערימה
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--success)', background: 'color-mix(in oklab, var(--success) 12%, transparent)', padding: '4px 10px', borderRadius: 999, fontWeight: 600 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--success)', animation: 'pulse 1.2s infinite' }}/>
+          מתבצע
+        </div>
+      </div>
+
+      <span className={`cat ${cat.cls}`} style={{ alignSelf: 'flex-start', fontSize: 13, padding: '5px 10px' }}>
+        {cat.emoji} {cat.label}
+      </span>
+      <div className="font-display" style={{ fontSize: 24, fontWeight: 500, lineHeight: 1.25, marginTop: 10 }}>
+        {task.title}
+      </div>
+
+      {/* Timer ring */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
+        <div style={{ position: 'relative', width: 200, height: 200 }}>
+          <svg width="200" height="200" viewBox="0 0 200 200" style={{ transform: 'rotate(-90deg)' }}>
+            <circle cx="100" cy="100" r="88" fill="none" stroke="var(--line)" strokeWidth="10"/>
+            <circle cx="100" cy="100" r="88" fill="none" stroke="var(--accent)" strokeWidth="10" strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 88}`}
+              strokeDashoffset={`${2 * Math.PI * 88 * (1 - pct / 100)}`}
+              style={{ transition: 'stroke-dashoffset 0.5s linear' }}/>
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="font-display" style={{ fontSize: 44, fontWeight: 500, color: 'var(--ink)', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+              {mm}:{ss}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 6, fontWeight: 500 }}>
+              מתוך {task.duration} דקות
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 14 }}>
+        <button className="btn btn-ghost" onClick={() => setPaused(p => !p)} style={{ padding: '8px 14px', fontSize: 13 }}>
+          {paused ? '▶ המשך' : <>{I.pause(14)} השהה</>}
+        </button>
+        <button className="btn btn-ghost" onClick={() => setSec(0)} style={{ padding: '8px 14px', fontSize: 13 }}>
+          אפס
+        </button>
+      </div>
+
+      {/* AI Subtasks */}
+      <div style={{ marginTop: 22 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+          <span style={{ color: 'var(--accent)' }}>{I.sparkle(14)}</span>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-2)' }}>אני אחלק את זה לצעדים?</div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {subtasks.map((s, i) => {
+            const isDone = checked.has(i);
+            return (
+              <div key={i} onClick={() => { const n = new Set(checked); n.has(i) ? n.delete(i) : n.add(i); setChecked(n); }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', borderRadius: 12,
+                  background: isDone ? 'var(--surface-2)' : 'var(--surface)',
+                  border: '1px solid var(--line)', cursor: 'pointer',
+                }}>
+                <div style={{
+                  width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+                  background: isDone ? 'var(--success)' : 'transparent',
+                  border: '1.5px solid ' + (isDone ? 'var(--success)' : 'var(--line-strong)'),
+                  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>{isDone && I.check(12)}</div>
+                <div style={{ flex: 1, fontSize: 14, color: isDone ? 'var(--ink-3)' : 'var(--ink)', textDecoration: isDone ? 'line-through' : 'none' }}>{s}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 'auto', paddingTop: 16, paddingBottom: 14, display: 'flex', gap: 8 }}>
+        <button className="btn btn-ghost" onClick={onPause} style={{ flex: 1 }}>נעצור</button>
+        <button className="btn btn-primary" onClick={onComplete} style={{ flex: 2 }}>
+          {I.check(18)} סיימתי!
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function getSubtasks(task) {
+  if (task.mode === 'call') return ['למצוא את המספר', 'לחייג', 'לסכם פרטים'];
+  if (task.cat === 'finance') return ['לפתוח את החשבון', 'לבדוק פרטים', 'לסמן כ״בוצע״'];
+  if (task.mode === 'physical') return ['לפנות את האזור', 'לסווג: להשאיר / לזרוק', 'לנקות', 'להחזיר בסדר חדש'];
+  return ['להתחיל', 'להתקדם', 'לסיים'];
+}
+
+// ── Step 4: Complete ─────────────────────────────────────
+function CompleteScreen({ task, onNext, onExit }) {
+  return (
+    <div className="content" style={{ padding: '14px 22px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+      <div style={{ flex: 1 }}/>
+      <div style={{ fontSize: 64, animation: 'pulse 1.5s infinite' }}>🎉</div>
+      <div className="font-display" style={{ fontSize: 32, fontWeight: 500, marginTop: 18, lineHeight: 1.15 }}>
+        יפה!
+      </div>
+      <div style={{ fontSize: 15, color: 'var(--ink-3)', marginTop: 8, maxWidth: 280, lineHeight: 1.4 }}>
+        סגרת את ״{task.title}״. משימה אחת פחות על הראש.
+      </div>
+
+      <div className="card" style={{ padding: '14px 16px', marginTop: 24, width: '100%', display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+        <div>
+          <div className="font-display" style={{ fontSize: 22, color: 'var(--success)' }}>+1</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>הושלמו היום</div>
+        </div>
+        <div style={{ width: 1, background: 'var(--line)' }}/>
+        <div>
+          <div className="font-display" style={{ fontSize: 22, color: 'var(--ink)' }}>4</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>רצף ימים</div>
+        </div>
+        <div style={{ width: 1, background: 'var(--line)' }}/>
+        <div>
+          <div className="font-display" style={{ fontSize: 22, color: 'var(--ink)' }}>{task.duration}</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>דק׳ חסכת</div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1 }}/>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 20 }}>
+        <button className="btn btn-primary" onClick={onNext} style={{ padding: '14px' }}>
+          עוד קלף ←
+        </button>
+        <button className="btn btn-text" onClick={onExit}>סיים לעכשיו</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Empty state after queue cleared ──────────────────────
+function EmptyQueue({ onExit, ctx, onReconfigure, stats }) {
+  return (
+    <div className="content" style={{ padding: '14px 22px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+      <div style={{ flex: 1 }}/>
+      <div style={{ fontSize: 54 }}>✨</div>
+      <div className="font-display" style={{ fontSize: 26, fontWeight: 500, marginTop: 14 }}>
+        סיימת את הערימה
+      </div>
+      <div style={{ fontSize: 14, color: 'var(--ink-3)', marginTop: 6, maxWidth: 260 }}>
+        אישרת {stats.yes} · דחית ל-{stats.later} · דילגת {stats.skip}
+      </div>
+      <div style={{ flex: 1 }}/>
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 20 }}>
+        <button className="btn btn-primary" onClick={onReconfigure}>שנה קונטקסט ←</button>
+        <button className="btn btn-text" onClick={onExit}>חזרה לבית</button>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { PickFlow });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════
+       cards-app.jsx  —  App shell, Me screen, Tweaks
+  ═══════════════════════════════════════════════════════ -->
+  <script type="text/babel">
+// Cards — main app shell
+
+const { useState, useEffect, useRef } = React;
+
+function App() {
+  const [screen, setScreen] = useState(() => localStorage.getItem('cards.screen') || 'home');
+  const [prevScreen, setPrevScreen] = useState('home');
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [toast, setToast] = useState(null);
+  const [allFilter, setAllFilter] = useState('all');
+  const [activeTask, setActiveTask] = useState(null);
+
+  useEffect(() => { localStorage.setItem('cards.screen', screen); }, [screen]);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2200);
+  };
+
+  const addTask = (t) => {
+    const id = 'n' + Date.now();
+    setTasks(ts => [{ ...t, id, created: new Date().toISOString().slice(0,10) }, ...ts]);
+    showToast('נוספה לערימה ✓');
+  };
+
+  const toggleDone = (id) => {
+    setTasks(ts => ts.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  };
+
+  const goPick = () => { setPrevScreen(screen); setScreen('pick'); };
+  const exitPick = () => setScreen(prevScreen || 'home');
+
+  const goAll = (filter = 'all') => { setAllFilter(filter); setScreen('all'); };
+
+  // Active task lifecycle
+  const startTask = (task) => {
+    setActiveTask(task);
+    setScreen('home');
+  };
+
+  const finishTask = () => {
+    if (activeTask) {
+      toggleDone(activeTask.id);
+      showToast('כל הכבוד! משימה הושלמה 🎉');
+    }
+    setActiveTask(null);
+  };
+
+  const skipTask = () => {
+    setActiveTask(null);
+    showToast('נשמרה לפעם הבאה');
+  };
+
+  return (
+    <>
+      {screen === 'home' && <Home tasks={tasks} onAdd={() => setSheetOpen(true)} onPick={goPick} onOpenAll={goAll} activeTask={activeTask} onFinishTask={finishTask} onSkipTask={skipTask}/>}
+      {screen === 'all' && <AllTasks tasks={tasks} onToggleDone={toggleDone} onAdd={() => setSheetOpen(true)} onBack={() => setScreen('home')} initialFilter={allFilter}/>}
+      {screen === 'pick' && <PickFlow tasks={tasks} onStartTask={startTask} onExit={exitPick}/>}
+      {screen === 'me' && <MeScreen tasks={tasks}/>}
+
+      <QuickAddSheet open={sheetOpen} onClose={() => setSheetOpen(false)} onSave={addTask}/>
+
+      <div className={`toast ${toast ? 'show' : ''}`}>{I.check(16)} {toast}</div>
+    </>
+  );
+}
+
+function TabItem({ icon, label, active, onClick }) {
+  return (
+    <div className={`tab-item ${active ? 'active' : ''}`} onClick={onClick}>
+      {icon(22)}
+      <div>{label}</div>
+      <div className="dot"/>
+    </div>
+  );
+}
+
+function MeScreen({ tasks }) {
+  const done = tasks.filter(t => t.done).length;
+  const catCounts = Object.keys(CATEGORIES).map(k => ({
+    k, ...CATEGORIES[k], n: tasks.filter(t => t.cat === k && !t.done).length,
+  })).filter(c => c.n > 0);
+  return (
+    <div className="content" style={{ padding: '14px 22px 0' }}>
+      <div className="font-display" style={{ fontSize: 28, fontWeight: 500 }}>נועם</div>
+      <div style={{ fontSize: 13, color: 'var(--ink-3)', marginTop: 2 }}>חבר מאז מרץ 2026</div>
+
+      <div className="card" style={{ marginTop: 18, padding: 18 }}>
+        <div className="font-display" style={{ fontSize: 16, fontWeight: 500, marginBottom: 12 }}>השבוע שלך</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+          <MiniStat v={done} l="הושלמו" color="var(--success)"/>
+          <MiniStat v="4" l="רצף ימים" color="var(--accent)"/>
+          <MiniStat v="142" l="דק׳ חסכת"/>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 12, padding: 16 }}>
+        <div className="font-display" style={{ fontSize: 16, fontWeight: 500, marginBottom: 12 }}>פיזור בערימה</div>
+        {catCounts.map(c => {
+          const pct = (c.n / tasks.filter(t => !t.done).length) * 100;
+          return (
+            <div key={c.k} style={{ marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                <span>{c.emoji} {c.label}</span>
+                <span style={{ color: 'var(--ink-3)' }}>{c.n}</span>
+              </div>
+              <div style={{ height: 6, background: 'var(--line)', borderRadius: 3 }}>
+                <div style={{ width: `${pct}%`, height: '100%', background: `var(--c-${c.k})`, borderRadius: 3 }}/>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="card" style={{ marginTop: 12, padding: 16 }}>
+        <div className="font-display" style={{ fontSize: 16, fontWeight: 500, marginBottom: 12 }}>הגדרות AI</div>
+        <Setting label="AI מציע קטגוריה" on/>
+        <Setting label="AI מציע צעדים לכל משימה" on/>
+        <Setting label="שיתוף קול עם משפחה"/>
+        <Setting label="התראות חכמות לפי קונטקסט" on/>
+      </div>
+
+      <div style={{ height: 100 }}/>
+    </div>
+  );
+}
+
+function MiniStat({ v, l, color }) {
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div className="font-display" style={{ fontSize: 24, fontWeight: 500, color: color || 'var(--ink)' }}>{v}</div>
+      <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{l}</div>
+    </div>
+  );
+}
+
+function Setting({ label, on }) {
+  const [val, setVal] = useState(!!on);
+  return (
+    <div onClick={() => setVal(v => !v)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', cursor: 'pointer', borderBottom: '1px solid var(--line)' }}>
+      <div style={{ fontSize: 14 }}>{label}</div>
+      <div style={{
+        width: 40, height: 24, borderRadius: 999,
+        background: val ? 'var(--accent)' : 'var(--line-strong)',
+        position: 'relative', transition: 'background 0.15s',
+      }}>
+        <div style={{
+          position: 'absolute', top: 2, right: val ? 2 : 18,
+          width: 20, height: 20, borderRadius: '50%',
+          background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+          transition: 'right 0.15s',
+        }}/>
+      </div>
+    </div>
+  );
+}
+
+// Tweaks panel
+function Tweaks({ open, config, setConfig, onClose }) {
+  const swatches = [
+    { k: 'amber', val: '#c9611a', soft: '#fbe5cd', soft2: '#fdf0dd', ink: '#6e3409' },
+    { k: 'plum',  val: '#8a4a7a', soft: '#ecd8e6', soft2: '#f6e9f1', ink: '#4a2040' },
+    { k: 'moss',  val: '#4a7a47', soft: '#d7e8d5', soft2: '#e8f0e6', ink: '#264822' },
+    { k: 'clay',  val: '#9e4e3a', soft: '#f0d4ca', soft2: '#f8e6de', ink: '#5a2418' },
+    { k: 'deep',  val: '#3a5c7e', soft: '#d2ddeb', soft2: '#e3ebf3', ink: '#1a3350' },
+  ];
+  const applySw = (s) => {
+    document.documentElement.style.setProperty('--accent', s.val);
+    document.documentElement.style.setProperty('--accent-soft', s.soft);
+    document.documentElement.style.setProperty('--accent-soft-2', s.soft2);
+    document.documentElement.style.setProperty('--accent-ink', s.ink);
+    setConfig({ ...config, accent: s.k });
+  };
+  const setTheme = (t) => {
+    document.documentElement.setAttribute('data-theme', t);
+    setConfig({ ...config, theme: t });
+  };
+  if (!open) return null;
+  return (
+    <div className="tweaks open">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <h4 style={{ margin: 0 }}>Tweaks</h4>
+        <div onClick={onClose} style={{ cursor: 'pointer', color: 'var(--ink-3)' }}>{I.close(18)}</div>
+      </div>
+      <div className="row">
+        <label>צבע ראשי</label>
+        <div className="swatches">
+          {swatches.map(s => (
+            <div key={s.k} className={`sw ${config.accent === s.k ? 'active' : ''}`}
+              style={{ background: s.val }} onClick={() => applySw(s)}/>
+          ))}
+        </div>
+      </div>
+      <div className="row">
+        <label>ערכת נושא</label>
+        <div className="segment" style={{ fontSize: 12 }}>
+          <div className={config.theme === 'light' ? 'active' : ''} onClick={() => setTheme('light')}>בהיר</div>
+          <div className={config.theme === 'dark' ? 'active' : ''} onClick={() => setTheme('dark')}>כהה</div>
+        </div>
+      </div>
+      <div className="row">
+        <label>מסך פתיחה</label>
+        <select value={config.start} onChange={e => setConfig({ ...config, start: e.target.value })}>
+          <option value="home">בית</option>
+          <option value="all">רשימת משימות</option>
+          <option value="pick">״יש לי זמן״</option>
+          <option value="me">פרופיל</option>
+        </select>
+      </div>
+    </div>
+  );
+}
+
+// Root wrapper
+function Root() {
+  const [config, setConfig] = useState({ accent: 'amber', theme: 'light', start: 'home' });
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+
+  useEffect(() => {
+    const onMsg = (e) => {
+      const d = e.data || {};
+      if (d.type === '__activate_edit_mode') setTweaksOpen(true);
+      else if (d.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', config.theme);
+  }, []);
+
+  return (
+    <div className="app">
+      <AppWithStart start={config.start}/>
+    </div>
+  );
+}
+
+function AppWithStart({ start }) {
+  const [key, setKey] = useState(0);
+  const prevStart = useRef(start);
+  useEffect(() => {
+    if (prevStart.current !== start) {
+      localStorage.setItem('cards.screen', start);
+      prevStart.current = start;
+      setKey(k => k + 1);
+    }
+  }, [start]);
+  return <App key={key}/>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+  </script>
+</body>
+</html>
