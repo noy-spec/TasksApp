@@ -1652,12 +1652,27 @@ function App() {
   const [screen, setScreen] = useState(() => localStorage.getItem('cards.screen') || 'home');
   const [prevScreen, setPrevScreen] = useState('home');
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [tasks, setTasks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cards.tasks');
+      return saved ? JSON.parse(saved) : INITIAL_TASKS;
+    } catch { return INITIAL_TASKS; }
+  });
   const [toast, setToast] = useState(null);
   const [allFilter, setAllFilter] = useState('all');
-  const [activeTask, setActiveTask] = useState(null);
+  const [activeTask, setActiveTask] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cards.activeTask');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  });
 
   useEffect(() => { localStorage.setItem('cards.screen', screen); }, [screen]);
+  useEffect(() => { localStorage.setItem('cards.tasks', JSON.stringify(tasks)); }, [tasks]);
+  useEffect(() => {
+    if (activeTask) localStorage.setItem('cards.activeTask', JSON.stringify(activeTask));
+    else localStorage.removeItem('cards.activeTask');
+  }, [activeTask]);
 
   const showToast = (msg) => {
     setToast(msg);
